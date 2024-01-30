@@ -27,16 +27,18 @@ class Movie:
     def __init__(self):
         search_str = input("Enter a title: ")
         payload = self.build_raw(search_str)
+        self.build_mov(payload)
 
+        # #########
+        # DEBUGGING
+        ###########
         import pprint as pp
 
         pp.pprint(payload)
 
-        self.build_mov(payload)
-
     def build_mov(self, xe: dict[str, str]):
         """
-        From a successful search, build Movie obj
+        From a successful search, build Movie obj.
         """
         self.title = xe.get("Title")
         self.year = xe.get("Year")
