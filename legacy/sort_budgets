@@ -1,0 +1,5 @@
+jq -S '.' budgets.json > temp && mv temp budgets.json
+jq . budgets.json
+
+
+# cat budgets.json | jq -r 'to_entries | map("\(.key[:35] | if length < 35 then . + " " * (35 - length) else . end) \(.value | tostring)") | .[]' | column -t

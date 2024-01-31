@@ -1,3 +1,4 @@
+import sqlite3
 import requests
 from creds import BEARER
 from dataclasses import dataclass
@@ -22,19 +23,20 @@ class Ratings:
         self.mc = flat.get("Metacritic")  # type: ignore
 
 
-@dataclass
 class Movie:
     def __init__(self):
         search_str = input("Enter a title: ")
         payload = self.build_raw(search_str)
+        print("successfully built payload")
         self.build_mov(payload)
-
+        self.update_db()
         # #########
         # DEBUGGING
         ###########
-        import pprint as pp
 
-        pp.pprint(payload)
+        # import pprint as pp
+        #
+        # pp.pprint(payload)
 
     def build_mov(self, xe: dict[str, str]):
         """
@@ -89,7 +91,14 @@ class Movie:
             f"http://www.omdbapi.com/?apikey=8648ed18&t={usr_title}",
             timeout=(3, 6),
         )
+
         omdb_res = omdb_req.json()
+
+        if omdb_res.get("Response") == "False":
+            import sys
+
+            print("Bad Input")
+            sys.exit(1)
 
         movie_id = omdb_res.get("imdbID")
 
@@ -112,7 +121,7 @@ class Movie:
             if v in ["N/A", 0]:
                 merged[k] = None
 
-            if "$" in str(v):
+            if "$" in str(v) and k != "overview":
                 merged[k] = int(v.replace("$", "").replace(",", ""))
 
             if k in ["Actors", "Country", "Genre", "Language", "Writer"]:
@@ -120,3 +129,20 @@ class Movie:
                     merged[k] = v.split(", ")
 
         return merged
+
+    def update_db(self):
+        CONN = sqlite3.connect("movies.db")
+        CURSOR = CONN.cursor()
+
+        try:
+            CURSOR.execute(
+                "INSERT INTO movies (title, year, budget) VALUES (?, ?, ?)",
+                (self.title, self.year, self.budget),
+            )
+
+            CONN.commit()
+            print(f"Added {self.title} successfully!")
+        except:
+            print(f"Error: {self.title} already exists.")
+        finally:
+            CONN.close()
