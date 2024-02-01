@@ -23,11 +23,21 @@ class bcolors:
 
 def main():
     mov = Movie()
-    print(mov)
+    print(mov.__dict__)
     output_db()
+    mov.make_template_md()
 
 
-def output_db():
+def output_db(sort_key: str = "budget") -> None:
+    """
+    Output a list of movies and their budgets, ordered by name or budget.
+
+    Parameters
+    ----------
+
+    sort_key : Key which determines how the output is sorted.
+    Default value = "budget"
+    """
     CONN = sqlite3.connect("movies.db")
     CURSOR = CONN.cursor()
 
@@ -35,13 +45,24 @@ def output_db():
     output = CURSOR.fetchall()
     CONN.close()
 
-    yapo = [x for x in output if x[2] is not None]
-    sorte_list = sorted(yapo, key=lambda x: x[2])
+    clean_table = [x for x in output if x[2] is not None]
+    sorted_list = []
 
-    for i in sorte_list:
+    match sort_key:
+        case "title":
+            sorted_list = sorted(clean_table, key=lambda x: x[0])
+
+        case "budget":
+            sorted_list = sorted(clean_table, key=lambda x: x[2])
+
+    for i in sorted_list:
         title = i[0]
+        year = i[1]
         budget = i[2]
-        print(f"  {bcolors.OKCYAN}{title[0:35]:<40}{bcolors.WARNING}${budget:>12,}")
+        print(
+            f" ({year}) {bcolors.OKCYAN}{title[0:35]:<40}{bcolors.WARNING}${budget:>12,}"
+        )
+    print(f"Output {len(sorted_list)} titles.")
 
 
 if __name__ == "__main__":

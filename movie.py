@@ -26,9 +26,9 @@ class Ratings:
 class Movie:
     def __init__(self):
         search_str = input("Enter a title: ")
-        payload = self.build_raw(search_str)
+        payload = self.__build_raw(search_str)
         print("successfully built payload")
-        self.build_mov(payload)
+        self.__build_mov(payload)
         self.update_db()
         # #########
         # DEBUGGING
@@ -38,26 +38,26 @@ class Movie:
         #
         # pp.pprint(payload)
 
-    def build_mov(self, xe: dict[str, str]):
+    def __build_mov(self, xe: dict[str, str]):
         """
         From a successful search, build Movie obj.
         """
-        self.title = xe.get("Title")
-        self.year = xe.get("Year")
-        self.released = xe.get("Released")
-        self.director = xe.get("Director")
-        self.writer = xe.get("Writer")
         self.actors = xe.get("Actors")
-        self.plot = xe.get("overview")
         self.age_rating = xe.get("Rated")
-        self.genre = xe.get("Genre")
-        self.budget = xe.get("budget")
         self.box_dom = xe.get("BoxOffice")
         self.box_for = None
         self.box_ww = xe.get("revenue")
+        self.budget = xe.get("budget")
         self.country = xe.get("Country")
-        self.ratings = Ratings(xe.get("Ratings"), xe.get("imdbVotes"))
+        self.director = xe.get("Director")
+        self.genre = xe.get("Genre")
         self.imdb_id = xe.get("imdbID")
+        self.plot = xe.get("overview")
+        self.ratings = Ratings(xe.get("Ratings"), xe.get("imdbVotes"))
+        self.released = xe.get("Released")
+        self.title = xe.get("Title")
+        self.writer = xe.get("Writer")
+        self.year = xe.get("Year")
         self.runtime = (
             "{}h {:02d}min".format(*divmod(xe.get("runtime"), 60))  # type: ignore
             if xe.get("runtime") is not None
@@ -73,7 +73,7 @@ class Movie:
         if self.plot is None:
             self.plot = xe.get("Plot")
 
-    def build_raw(self, usr_title: str) -> dict[str, str]:
+    def __build_raw(self, usr_title: str) -> dict[str, str]:
         """
         From a `usr_title`, search APIs for movie info
         """
@@ -121,14 +121,73 @@ class Movie:
             if v in ["N/A", 0]:
                 merged[k] = None
 
-            if "$" in str(v) and k != "overview":
+            elif "$" in str(v) and k != "overview":
                 merged[k] = int(v.replace("$", "").replace(",", ""))
 
-            if k in ["Actors", "Country", "Genre", "Language", "Writer"]:
+            elif k in ["Actors", "Language", "Writer"]:
                 if "," in v:
                     merged[k] = v.split(", ")
+                else:
+                    merged[k] = [v]
 
         return merged
+
+    def make_template_md(self):
+        bad_char = "%:/,.\\[]<>|*?\"'"
+        save_title = "".join([c for c in self.title if c not in bad_char]).replace(
+            " ", "_"
+        )
+
+        with open(f"./md/{save_title}.md", "w", encoding="utf-8") as file:
+            file.write(
+                f"# [*{self.title}* ({self.year})](https://imdb.com/title/{self.imdb_id})\n"
+            )
+            file.write(f"\n> {self.plot}")
+            file.write("\n")
+            file.write("### *General*\n")
+            file.write(f"- *Released*: {self.released} ({self.country})\n")
+            file.write(f"- *Awards*: {self.awards}\n")
+            file.write(f"- *Runtime*: {self.runtime}\n")
+            file.write(f"- *Genre*: {self.genre }\n")
+            file.write(f"- *Director*: {self.director}\n")
+
+            if self.writer:
+                if len(self.writer) > 1:
+                    file.write("- *Writers*:\n")
+                    for writer in self.writer:
+                        file.write(f"\t- {writer}\n")
+                else:
+                    file.write(f"- *Writer*: {self.writer[0]}\n")
+
+            if self.actors:
+                file.write("- *Actors*:\n")
+                for actor in self.actors:
+                    file.write(f"\t- {actor}\n")
+
+            file.write("\n### *Finances*\n")
+            for attribute, title in [
+                (self.budget, "Budget"),
+                (self.box_dom, "Box Office (D)"),
+                (self.box_for, "Box Office (F)"),
+                (self.box_ww, "Box Office (\\*)"),
+            ]:
+                if attribute is not None and attribute is not 0:
+                    file.write(f"- *{title}*: ${attribute:,}\n")
+
+            file.write("\n### *Ratings* \n")
+            for attribute, agency in [
+                (self.ratings.mc, "MetaCritic"),
+                (self.ratings.rt, "Rotten Tomatoes"),
+                (self.ratings.imdb, "IMDb"),
+            ]:
+                if attribute is None:
+                    continue
+                elif agency == "IMDb":
+                    file.write(
+                        f"- {agency}: {attribute} ({self.ratings.imdb_v})\n"
+                    )  # noqa
+                else:
+                    file.write(f"- {agency}: {attribute}\n")
 
     def update_db(self):
         CONN = sqlite3.connect("movies.db")
