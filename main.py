@@ -68,18 +68,18 @@ def db_output(sort_key: str) -> None:
         clean_table, key=lambda x: x[{"title": 1, "year": 2, "budget": 3}[sort_key]]
     )
 
-    budgets = [item[3] for item in clean_table]
-
-    budget_range = max(budgets)
+    # budgets = [item[3] for item in clean_table]
+    #
+    # budget_range = max(budgets)
 
     for i in sorted_list:
         title = i[1]
         year = i[2]
         budget = i[3]
-        yarsh = round((budget / budget_range) * 20)
+        # yarsh = round((budget / budget_range) * 20)
         print(
             f"{bcolors.FAIL}({year}) {bcolors.OKCYAN}{title[0:35]:<40}${budget:>12,} "
-            + (yarsh * "*")
+            # + (yarsh * "*")
         )
     print(f"Output: {len(sorted_list)} titles.")
 

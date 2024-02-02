@@ -50,7 +50,7 @@ class Template:
                     (self.movie.box_for, "Box Office (F)"),
                     (self.movie.box_ww, "Box Office (\\*)"),
                 ]:
-                    if attribute is not None and attribute is not 0:
+                    if attribute is not None and attribute != 0:
                         file.write(f"- *{title}*: ${attribute:,}\n")
 
                 file.write("\n### *Ratings* \n")
