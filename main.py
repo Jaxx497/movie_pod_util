@@ -1,8 +1,8 @@
-import sys
+# import sys
+from pathlib import Path
 import sqlite3
 import argparse
 import pprint as pp
-from src.template import Template
 from src.movie import Movie
 
 
@@ -14,6 +14,7 @@ from src.movie import Movie
 
 
 class bcolors:
+    DEFAULT = "\033[1;37m"
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -24,6 +25,16 @@ class bcolors:
 
 
 def db_new():
+    try:
+        path = Path("md/")
+        if not path.exists():
+            path.mkdir(parents=True)
+            print(f"Directory '{path}' created.")
+        else:
+            print(f"Directory '{path}' already exists.")
+    except Exception as e:
+        print(f"Error: {e}")
+
     try:
         CONN = sqlite3.connect("movies.db")
         CURSOR = CONN.cursor()
@@ -59,18 +70,9 @@ def db_output(sort_key: str) -> None:
     CONN = sqlite3.connect("movies.db")
     CURSOR = CONN.cursor()
 
-    CURSOR.execute("SELECT * FROM movies")
-    output = CURSOR.fetchall()
+    CURSOR.execute(f"SELECT * FROM movies ORDER BY {sort_key}")
+    sorted_list = CURSOR.fetchall()
     CONN.close()
-
-    clean_table = [x for x in output if x[3] is not None]
-    sorted_list = sorted(
-        clean_table, key=lambda x: x[{"title": 1, "year": 2, "budget": 3}[sort_key]]
-    )
-
-    # budgets = [item[3] for item in clean_table]
-    #
-    # budget_range = max(budgets)
 
     for i in sorted_list:
         title = i[1]
@@ -78,14 +80,15 @@ def db_output(sort_key: str) -> None:
         budget = i[3]
         # yarsh = round((budget / budget_range) * 20)
         print(
-            f"{bcolors.FAIL}({year}) {bcolors.OKCYAN}{title[0:35]:<40}${budget:>12,} "
+            f"{bcolors.FAIL}({year}) {bcolors.OKCYAN}{title[0:35]:<40}{bcolors.WARNING}${budget:>12,} "
             # + (yarsh * "*")
         )
-    print(f"Output: {len(sorted_list)} titles.")
+    print(f"Output: {bcolors.DEFAULT}{len(sorted_list)} titles.")
 
 
 if __name__ == "__main__":
     # db_new()
+    # sys.exit(1)
     parser = argparse.ArgumentParser()
 
     parser.add_argument("title", help="Search query")
@@ -107,31 +110,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     mov = None
-    # If a year is inserted and not a search title...
+    final_output = None
 
     if args.title not in ["qq", "jj", "zz", "!"]:
-        # if args.year and not args.title:
-        #     print("Unable to complete search without a title")
-        #
-        # elif args.output and not args.title:
-        #     print("Unable to complete output without a title")
-        #
-        # elif args.title:
         mov = Movie(args.title, args.year)
 
         # Match OUTPUT options
-        match args.output:
-            case "std":
-                try:
-                    pp.pprint(mov.__dict__)
-                except:
-                    "No video to output"
-            case "md":
-                print("OUTPUTTING TO MD")
-                x = Template(mov)
-                x.new_md()
-            case _:
-                pass
+        if args.output == "std":
+            final_output = mov.output_std()
+        elif args.output == "md":
+            print("OUTPUTTING TO MD")
+            final_output = mov.output_md()
 
-    if args.sort_key is not None:
+    if args.sort_key:
         db_output(args.sort_key)
+    if final_output:
+        pp.pprint(final_output)

@@ -1,6 +1,4 @@
-
 [flake8]
 ignore=E501
-ignore=reportGneralTypeIssues
 
 max-line-length = 200
