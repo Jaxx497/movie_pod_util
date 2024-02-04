@@ -1,16 +1,7 @@
-# import sys
-from pathlib import Path
 import sqlite3
 import argparse
 import pprint as pp
 from src.movie import Movie
-
-
-############### TODO ###############
-# Create config file
-# Handle args
-# Handle output
-####################################
 
 
 class bcolors:
@@ -24,7 +15,15 @@ class bcolors:
     TEMP = "\u001b[38;2;145;231;255m"
 
 
-def db_new():
+def init():
+    """
+    Initialize working directory with new database, markdown folder, and config file.
+    """
+
+    import os
+    import sys
+    from pathlib import Path
+
     try:
         path = Path("md/")
         if not path.exists():
@@ -54,6 +53,15 @@ def db_new():
     except Exception as e:
         print(f"Error: {e}")
 
+    if not os.path.exists("config.ini"):
+        with open("config.ini", "w") as f:
+            f.write("[API_KEYS]")
+            f.write("omdb = ")
+            f.write("tmdb = ")
+        f.close()
+        print("`config.ini` has been created.\nMake sure to insert API data")
+        sys.exit(1)
+
 
 def db_output(sort_key: str) -> None:
     """
@@ -74,33 +82,35 @@ def db_output(sort_key: str) -> None:
     sorted_list = CURSOR.fetchall()
     CONN.close()
 
+    max_bud = max(sorted_list, key=lambda x: x[3])[3]
+
     for i in sorted_list:
         title = i[1]
         year = i[2]
         budget = i[3]
-        # yarsh = round((budget / budget_range) * 20)
+
+        yarsh = round((budget / max_bud) * 20)
         print(
             f"{bcolors.FAIL}({year}) {bcolors.OKCYAN}{title[0:35]:<40}{bcolors.WARNING}${budget:>12,} "
-            # + (yarsh * "*")
+            + (yarsh * "*")
         )
     print(f"Output: {bcolors.DEFAULT}{len(sorted_list)} titles.")
 
 
 if __name__ == "__main__":
-    # db_new()
-    # sys.exit(1)
     parser = argparse.ArgumentParser()
 
     parser.add_argument("title", help="Search query")
     parser.add_argument("-y", "--year", help="Search year of film")
     parser.add_argument(
-        "-o",
-        "--output",
-        help='Output movie to console ["std"] or markdown file ["md"]',
-        choices=["std", "md"],
+        "-o", "--output", action="store_true", help="Display movie info in console"
     )
     parser.add_argument(
-        "-d",
+        "-md", "--markdown", action="store_true", help="Publish movie in markdown file"
+    )
+
+    parser.add_argument(
+        "-db",
         "--database",
         help="Show budget table sorted by key",
         choices=["title", "year", "budget"],
@@ -109,20 +119,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    mov = None
     final_output = None
 
-    if args.title not in ["qq", "jj", "zz", "!"]:
+    if args.title == "init":
+        init()
+
+    elif args.title not in ["qq", "jj", "zz", "!"]:
         mov = Movie(args.title, args.year)
 
-        # Match OUTPUT options
-        if args.output == "std":
-            final_output = mov.output_std()
-        elif args.output == "md":
+        final_output = mov.output_std() if args.output else None
+        if args.markdown:
             print("OUTPUTTING TO MD")
             final_output = mov.output_md()
 
     if args.sort_key:
         db_output(args.sort_key)
-    if final_output:
+
+    if args.output:
         pp.pprint(final_output)

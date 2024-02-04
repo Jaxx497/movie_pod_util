@@ -213,7 +213,10 @@ class Movie:
         except Exception:
             return f"Could not create markdown file.\nException: {Exception}"
 
-    def db_add_movie(self):
+    def db_add_movie(self) -> None:
+        """
+        Append the movie to the connected database.
+        """
         CONN = sqlite3.connect("movies.db")
         CURSOR = CONN.cursor()
 
@@ -226,6 +229,9 @@ class Movie:
             CONN.commit()
             print(f"Added {self.title} successfully!")
         except Exception as e:
-            print(f"Error: {e}.")
+            if "UNIQUE constraint failed" in str(e):
+                print(f"{self.title} is already in the database!")
+            else:
+                print(f"Error: {e}.")
         finally:
             CONN.close()
