@@ -116,7 +116,6 @@ if __name__ == "__main__":
         choices=["title", "year", "budget"],
         dest="sort_key",
     )
-
     args = parser.parse_args()
 
     final_output = None
@@ -135,5 +134,5 @@ if __name__ == "__main__":
     if args.sort_key:
         db_output(args.sort_key)
 
-    if args.output:
+    if final_output:
         pp.pprint(final_output)
