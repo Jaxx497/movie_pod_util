@@ -1,0 +1,7 @@
+{
+  "include": ["src"],
+
+  "reportMissingTypeStubs": false,
+  "reportUnusedCallResult": false,
+  "reportAny": false
+}

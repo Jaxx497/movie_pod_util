@@ -16,9 +16,8 @@ class bcolors:
 
 
 def init():
-    """
-    Initialize working directory with new database, markdown folder, and config file.
-    """
+    """Initialize working directory with new database,
+    markdown folder, and config file."""
 
     import os
     import sys
@@ -92,7 +91,7 @@ def db_output(sort_key: str) -> None:
         yarsh = round((budget / max_bud) * 20)
         print(
             f"{bcolors.FAIL}({year}) {bcolors.OKCYAN}{title[0:35]:<40}{bcolors.WARNING}${budget:>12,} "
-            + (yarsh * "*")
+            + (yarsh * "*")  # noqa
         )
     print(f"Output: {bcolors.DEFAULT}{len(sorted_list)} titles.")
 
