@@ -165,24 +165,24 @@ class Movie:
                 file.write(f"\n> {self.plot}")
                 file.write("\n")
                 file.write("### *General*\n")
-                file.write(f"- *Released*: {self.released} ({self.country})\n")
-                file.write(f"- *Awards*: {self.awards}\n")
-                file.write(f"- *Runtime*: {self.runtime}\n")
-                file.write(f"- *Genre*: {self.genre }\n")
-                file.write(f"- *Director*: {self.director}\n")
+                file.write(f"  - *Released*: {self.released} ({self.country})\n")
+                file.write(f"  - *Awards*: {self.awards}\n")
+                file.write(f"  - *Runtime*: {self.runtime}\n")
+                file.write(f"  - *Genre*: {self.genre}\n")
+                file.write(f"  - *Director*: {self.director}\n")
 
                 if self.writer:
                     if len(self.writer) > 1:
-                        file.write("- *Writers*:\n")
+                        file.write("  - *Writers*:\n")
                         for writer in self.writer:
-                            file.write(f"\t- {writer}\n")
+                            file.write(f"\t  - {writer}\n")
                     else:
                         file.write(f"- *Writer*: {self.writer[0]}\n")
 
                 if self.actors:
-                    file.write("- *Actors*:\n")
+                    file.write("  - *Actors*:\n")
                     for actor in self.actors:
-                        file.write(f"\t- {actor}\n")
+                        file.write(f"\t  - {actor}\n")
 
                 file.write("\n### *Finances*\n")
                 for attribute, title in [
@@ -192,7 +192,7 @@ class Movie:
                     (self.box_ww, "Box Office (\\*)"),
                 ]:
                     if attribute is not None and attribute != 0:
-                        file.write(f"- *{title}*: ${attribute:,}\n")
+                        file.write(f"  - *{title}*: ${attribute:,}\n")
 
                 file.write("\n### *Ratings* \n")
                 for attribute, agency in [
@@ -204,10 +204,10 @@ class Movie:
                         continue
                     elif agency == "IMDb":
                         file.write(
-                            f"- {agency}: {attribute} ({self.ratings.imdb_v})\n"
+                            f"  - {agency}: {attribute} ({self.ratings.imdb_v})\n"
                         )  # noqa
                     else:
-                        file.write(f"- {agency}: {attribute}\n")
+                        file.write(f"  - {agency}: {attribute}\n")
             file.close()
             return f"Successfully wrote file to `./md/{save_title}.md`"
         except Exception:
